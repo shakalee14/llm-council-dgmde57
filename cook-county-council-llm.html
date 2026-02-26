@@ -74,11 +74,9 @@
             TrendingUp, ShieldAlert, Sprout, BookOpen, Scale, 
             LayoutDashboard, Plus, ChevronDown, ChevronUp, ExternalLink, 
             Bot, HardHat, Droplets, GitPullRequest, Search, MessageCircle, 
-            HelpCircle, X, Upload, PenTool, ClipboardCopy, Download, PlayCircle 
+            HelpCircle, X, PenTool, ClipboardCopy, Download, PlayCircle,
+            Settings, Key
         } = lucideReact;
-
-        /* --- GEMINI API CONFIGURATION --- */
-        const apiKey = ""; // Leave empty to trigger Demo Mode
 
         /* --- DEMO DATA --- */
         const DEMO_PROPOSAL = "Mandate that all new data centers over 50MW in Cook County must source 100% of their electricity from NEW local renewable energy projects (additionality) within 5 years of operation.";
@@ -148,7 +146,7 @@
 
         // --- SUB-COMPONENTS ---
 
-        const Header = ({ setView, setShowHelp }) => (
+        const Header = ({ setView, setShowHelp, setShowSettings }) => (
             <header className="bg-white border-b-2 border-black sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('landing')}>
@@ -161,6 +159,9 @@
                         </div>
                     </div>
                     <nav className="flex items-center gap-6">
+                        <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-black transition-colors">
+                            <Settings className="w-4 h-4" /> Settings
+                        </button>
                         <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-black transition-colors">
                             <HelpCircle className="w-4 h-4" /> How to Use
                         </button>
@@ -173,365 +174,42 @@
             </header>
         );
 
+        const SettingsModal = ({ apiKey, setApiKey, onClose }) => (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="bg-white max-w-md w-full rounded-xl shadow-2xl border-2 border-black overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-[#F8F9FA]">
+                        <h2 className="text-lg font-black flex items-center gap-2">
+                            <Settings className="w-5 h-5 text-[#00A3E0]" /> Settings
+                        </h2>
+                        <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-2 flex items-center gap-2">
+                                <Key className="w-4 h-4" /> Gemini API Key
+                            </label>
+                            <input
+                                type="password"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder="AIzaSy..."
+                                className="w-full bg-[#F0F4F8] border-2 border-gray-300 p-3 text-sm focus:border-[#00A3E0] outline-none"
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                Enter your own Gemini API key to run live simulations. Leave blank to use Demo Mode.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                        <button onClick={onClose} className="bg-black text-white px-6 py-2 font-bold hover:bg-[#00A3E0] transition-colors">Save & Close</button>
+                    </div>
+                </div>
+            </div>
+        );
+
         const HelpModal = ({ onClose }) => (
             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
                 <div className="bg-white max-w-2xl w-full rounded-xl shadow-2xl border-2 border-black overflow-hidden flex flex-col max-h-[90vh]">
                     <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-[#F8F9FA]">
                         <div>
-                            <h2 className="text-xl font-black flex items-center gap-2">
-                                <Bot className="w-6 h-6 text-[#00A3E0]" /> Simulation Guide
-                            </h2>
-                            <p className="text-sm text-gray-500">For POL-681MD Students</p>
-                        </div>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-lg transition-colors"><X className="w-6 h-6" /></button>
-                    </div>
-                    <div className="p-6 overflow-y-auto space-y-6">
-                        <div className="space-y-2">
-                            <h3 className="font-bold text-lg text-[#00A3E0]">1. Analyze</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed">Input your policy draft. The simulator will generate responses from the 4 key stakeholders based on their mandates.</p>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-bold text-lg text-[#00A3E0]">2. Reflect (New!)</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed">The tool will <span className="underline decoration-red-400 decoration-2">pause</span> after feedback. You must identify the key conflict and write your own decision rationale before seeing the answer.</p>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-bold text-lg text-[#00A3E0]">3. Compare</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed">After submitting your reflection, the "Coordinator's Model Answer" is revealed. Compare your decision logic with the AI's.</p>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-bold text-lg text-[#00A3E0]">4. Export</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed">Use the <strong>"Copy to Clipboard"</strong> button to grab your work.</p>
-                        </div>
-                    </div>
-                    <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end">
-                        <button onClick={onClose} className="bg-black text-white px-6 py-2 font-bold hover:bg-[#00A3E0] transition-colors">Start Simulation</button>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const WeightControl = ({ stakeholder, weight, setWeight }) => (
-            <div className="bg-white p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]">
-                <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-sm truncate pr-2">{stakeholder.role}</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-300">{(weight * 100).toFixed(0)}% Influence</span>
-                </div>
-                <input type="range" min="0" max="2" step="0.1" value={weight} onChange={(e) => setWeight(stakeholder.id, parseFloat(e.target.value))} className="w-full accent-[#00A3E0] h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-            </div>
-        );
-
-        const WorkflowStepper = ({ step }) => (
-            <div className="bg-[#E0F7FA] border-2 border-black p-4 mb-6 animate-in fade-in slide-in-from-top-2">
-                <h3 className="font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <GitPullRequest className="w-4 h-4" /> Council Workflow Status
-                </h3>
-                <div className="flex items-center relative">
-                    <div className="absolute left-0 top-1/2 w-full h-1 bg-gray-300 -z-10"></div>
-                    <div className={`flex flex-col items-center gap-2 w-1/3 transition-opacity duration-500 ${step >= 1 ? 'opacity-100' : 'opacity-50'}`}>
-                        <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center text-xs font-bold ${step >= 1 ? 'bg-[#00A3E0] text-white' : 'bg-white'}`}>{step > 1 ? <CheckCircle2 className="w-5 h-5" /> : '1'}</div>
-                        <span className="text-xs font-bold bg-[#E0F7FA] px-2">Analysis</span>
-                    </div>
-                    <div className={`flex flex-col items-center gap-2 w-1/3 transition-opacity duration-500 ${step >= 2 ? 'opacity-100' : 'opacity-50'}`}>
-                        <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center text-xs font-bold ${step >= 2 ? 'bg-[#00A3E0] text-white' : 'bg-white'}`}>{step > 2 ? <PenTool className="w-4 h-4" /> : '2'}</div>
-                        <span className="text-xs font-bold bg-[#E0F7FA] px-2">Your Decision</span>
-                    </div>
-                    <div className={`flex flex-col items-center gap-2 w-1/3 transition-opacity duration-500 ${step >= 3 ? 'opacity-100' : 'opacity-50'}`}>
-                        <div className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center text-xs font-bold ${step >= 3 ? 'bg-[#00A3E0] text-white' : 'bg-white'}`}>3</div>
-                        <span className="text-xs font-bold bg-[#E0F7FA] px-2">Final Comparison</span>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const CouncilCard = ({ member, loading }) => {
-            const [expanded, setExpanded] = useState(false);
-            const getIcon = () => {
-                switch(member.icon) {
-                    case 'growth': return <TrendingUp className="w-6 h-6" />;
-                    case 'community': return <Sprout className="w-6 h-6" />;
-                    case 'union': return <HardHat className="w-6 h-6" />;
-                    case 'policy': return <Droplets className="w-6 h-6" />;
-                    default: return <Users className="w-6 h-6" />;
-                }
-            };
-            const getStanceColor = () => {
-                switch(member.stance) {
-                    case 'approval': return 'bg-[#E6F4EA] border-[#1E8E3E] text-[#137333]'; 
-                    case 'objection': return 'bg-[#FCE8E6] border-[#D93025] text-[#C5221F]'; 
-                    case 'skeptical': return 'bg-[#FEF7E0] border-[#F9AB00] text-[#B06000]'; 
-                    case 'neutral': return 'bg-gray-100 border-gray-400 text-gray-800';
-                    default: return 'bg-gray-50 border-gray-300 text-gray-700';
-                }
-            };
-            return (
-                <div className="flex flex-col h-full bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-300">
-                    <div className={`p-4 border-b-2 border-black flex items-start justify-between ${getStanceColor()} bg-opacity-30`}>
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 border-2 border-black rounded-none">{getIcon()}</div>
-                            <div>
-                                <h3 className="font-bold text-base leading-tight">{member.role}</h3>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <div className="flex items-center gap-1.5 bg-black/5 border border-black/10 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider text-gray-500 cursor-not-allowed group">
-                                        <Bot className="w-3 h-3 group-hover:text-[#00A3E0]" />
-                                        <span>{member.defaultModel || "Gemini 2.5 Flash"}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="px-2 py-1 text-xs font-bold uppercase border border-current bg-white/50">{member.stance || "Pending"}</div>
-                    </div>
-                    <div className="p-4 flex-grow flex flex-col gap-4">
-                        {loading ? (
-                            <div className="space-y-3 animate-pulse">
-                                <div className="h-4 bg-gray-200 w-full"></div>
-                                <div className="h-4 bg-gray-200 w-5/6"></div>
-                                <div className="h-4 bg-gray-200 w-4/6"></div>
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-sm font-medium leading-relaxed">{member.content}</p>
-                                {member.resources && member.resources.length > 0 && (
-                                    <div className="mt-2 bg-gray-50 border border-gray-200 p-3">
-                                        <h4 className="text-xs font-bold uppercase text-gray-500 mb-2 flex items-center gap-1"><BookOpen className="w-3 h-3" /> Relevant Documents</h4>
-                                        <ul className="space-y-1">
-                                            {member.resources.map((res, idx) => (
-                                                <li key={idx} className="text-xs truncate flex items-center gap-1 text-blue-700 hover:underline cursor-pointer"><ExternalLink className="w-3 h-3 flex-shrink-0" /> {res.title}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                <div className="mt-auto pt-2">
-                                    <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-between text-xs font-bold text-gray-500 hover:text-black transition-colors">
-                                        <span>PRIVATE NOTES</span>
-                                        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                    </button>
-                                    {expanded && (
-                                        <div className="mt-2 p-3 bg-[#FFF8E1] border-l-4 border-[#FFC107] text-xs font-mono text-gray-800 leading-relaxed italic">"{member.notes || "Thinking..."}"</div>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    {!loading && (
-                        <div className="p-3 border-t-2 border-black bg-gray-50 flex items-center justify-between">
-                            <span className="text-xs font-bold text-gray-500">ALIGNMENT</span>
-                            <span className="text-sm font-black">{member.score}/100</span>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        // --- MAIN APP ---
-
-        function App() {
-            const [view, setView] = useState('landing');
-            const [showHelp, setShowHelp] = useState(false);
-            const [proposal, setProposal] = useState("");
-            const [studentReflection, setStudentReflection] = useState("");
-            const [studentRebuttal, setStudentRebuttal] = useState("");
-            const [stage, setStage] = useState('input');
-            const [processingStep, setProcessingStep] = useState(0);
-            const [isDemoMode, setIsDemoMode] = useState(false);
-            const [weights, setWeights] = useState({ env_dept: 1, perro: 1, ibew: 1, econ_dev: 1 });
-            const [councilState, setCouncilState] = useState(STAKEHOLDERS.map(s => ({ ...s, content: "", score: 0, stance: "pending" })));
-            const [synthesis, setSynthesis] = useState("");
-            const [conflict, setConflict] = useState("");
-            const [error, setError] = useState(null);
-
-            const updateWeight = (id, val) => setWeights(prev => ({ ...prev, [id]: val }));
-
-            const loadHistory = (historyItem) => {
-                setProposal(`REVIEWING CASE STUDY: ${historyItem.title}`);
-                const historicalState = STAKEHOLDERS.map(s => {
-                    const historyResponse = historyItem.responses.find(r => r.id === s.id);
-                    return { ...s, ...(historyResponse || { content: "No record.", stance: "neutral", score: 0, notes: "N/A", resources: [] }) };
-                });
-                setCouncilState(historicalState);
-                setSynthesis(historyItem.synthesis);
-                setStage('synthesized');
-                setProcessingStep(3);
-                setView('council');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-
-            const loadDemoScenario = () => {
-                setProposal(DEMO_PROPOSAL);
-                setStage('input');
-                setError(null);
-            };
-
-            const runCouncil = async () => {
-                if (!proposal.trim()) return;
-                setStage('deliberating');
-                setProcessingStep(1);
-                setError(null);
-                setSynthesis("");
-                setStudentReflection("");
-                setStudentRebuttal("");
-                setCouncilState(prev => prev.map(m => ({ ...m, content: "", score: 0, resources: [], notes: "", stance: "pending" })));
-
-                try {
-                    let parsedResult;
-                    // DEMO MODE CHECK
-                    if (!apiKey || proposal === DEMO_PROPOSAL) {
-                        setIsDemoMode(true);
-                        await new Promise(r => setTimeout(r, 2000));
-                        parsedResult = DEMO_RESULT;
-                    } else {
-                        setIsDemoMode(false);
-                        const systemPrompt = `You are a study aid. GOAL: Simulate Cook County AI policy stakeholders.`; // Simplified for brevity in HTML
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: `Proposal: ${proposal}` }] }],
-                                systemInstruction: { parts: [{ text: systemPrompt }] },
-                                generationConfig: { responseMimeType: "application/json" }
-                            })
-                        });
-                        if (!response.ok) throw new Error("API Error");
-                        const data = await response.json();
-                        parsedResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
-                    }
-
-                    setProcessingStep(2);
-                    await new Promise(r => setTimeout(r, 800));
-                    setCouncilState(prev => prev.map(m => {
-                        const newData = parsedResult.responses.find(r => r.id === m.id);
-                        return { ...m, ...newData };
-                    }));
-                    setSynthesis(parsedResult.synthesis);
-                    setConflict(parsedResult.conflict);
-                    setStage('reflection');
-
-                } catch (err) {
-                    console.error(err);
-                    setError("Simulation failed. Check API key or use Demo Mode.");
-                    setStage('input');
-                    setProcessingStep(0);
-                }
-            };
-
-            const finalizeReflection = () => {
-                setStage('synthesized');
-                setProcessingStep(3);
-                setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
-            };
-
-            const copyBriefToClipboard = () => {
-                const text = `POLICY BRIEF SIMULATION\n-----------------------\nPROPOSAL:\n${proposal}\n\nSTAKEHOLDER FEEDBACK:\n${councilState.map(s => `- ${s.role}: ${s.stance.toUpperCase()}`).join('\n')}\n\nSTUDENT REFLECTION:\n${studentReflection}\n\nCOORDINATOR SYNTHESIS:\n${synthesis}\n\nREBUTTAL:\n${studentRebuttal}`;
-                navigator.clipboard.writeText(text);
-                alert("Brief copied!");
-            };
-
-            if (view === 'landing') {
-                return (
-                    <div className="min-h-screen bg-[#F8F9FA] font-sans text-black">
-                        <Header setView={setView} setShowHelp={setShowHelp} />
-                        {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
-                        <main className="max-w-7xl mx-auto px-4 py-12">
-                            <div className="bg-[#00A3E0] text-white p-8 md:p-12 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-12">
-                                <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
-                                    <div>
-                                        <span className="inline-block bg-white text-[#00A3E0] font-black px-2 py-1 mb-3 text-xs uppercase tracking-widest">Study Aid</span>
-                                        <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">POL-681MD: Policy Simulator</h2>
-                                        <p className="text-lg mb-0 max-w-2xl font-medium opacity-90 leading-relaxed">Explore conflicting stakeholder perspectives on AI infrastructure.</p>
-                                    </div>
-                                    <button onClick={() => { setView('council'); setStage('input'); setProposal(''); }} className="bg-white text-black px-6 py-4 font-bold text-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center gap-3 whitespace-nowrap"><Plus className="w-5 h-5" /> Start Simulation</button>
-                                </div>
-                            </div>
-                            <div className="mb-8 flex items-end justify-between">
-                                <h3 className="text-2xl font-bold flex items-center gap-2"><LayoutDashboard className="w-6 h-6" /> Example Scenarios</h3>
-                                <span className="text-sm font-mono text-gray-500">Case Studies for Review</span>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {MOCK_HISTORY.map((item) => (
-                                    <div key={item.id} className="bg-white border-2 border-black p-6 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] transition-shadow flex flex-col h-full">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="font-mono text-xs text-gray-500">{item.date}</span>
-                                            <span className={`px-2 py-1 text-xs font-bold border border-black ${item.status.includes('Rejected') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{item.status.toUpperCase()}</span>
-                                        </div>
-                                        <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                                        <p className="text-gray-600 text-sm leading-relaxed border-l-2 border-gray-200 pl-3 flex-grow mb-4">{item.summary}</p>
-                                        <button onClick={() => loadHistory(item)} className="mt-auto text-xs font-bold underline decoration-2 decoration-[#00A3E0] hover:bg-[#E0F7FA] self-start">LOAD INTO SIMULATOR</button>
-                                    </div>
-                                ))}
-                            </div>
-                        </main>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="min-h-screen bg-[#F8F9FA] font-sans text-black pb-20">
-                    <Header setView={setView} setShowHelp={setShowHelp} />
-                    {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
-                    <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-                        <section className="animate-in fade-in slide-in-from-top-4 duration-500">
-                            <div className="flex items-center gap-2 mb-4"><Scale className="w-5 h-5" /><h3 className="font-bold text-lg">Stakeholder Influence Weights</h3></div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                {STAKEHOLDERS.map(s => <WeightControl key={s.id} stakeholder={s} weight={weights[s.id]} setWeight={updateWeight} />)}
-                            </div>
-                        </section>
-                        <section className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="block text-sm font-bold uppercase tracking-wide flex items-center gap-2">
-                                    <span>Policy Proposal Draft</span>
-                                    {isDemoMode && <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full border border-amber-300">DEMO MODE ACTIVE</span>}
-                                </label>
-                                <div className="flex items-center gap-2">
-                                    <button className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:text-white transition-colors bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded shadow-sm hover:bg-indigo-600" onClick={loadDemoScenario}><PlayCircle className="w-3.5 h-3.5" /><span>Load Demo Scenario</span></button>
-                                    <button className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-[#00A3E0] transition-colors bg-white border border-gray-300 px-3 py-1.5 rounded shadow-sm hover:border-[#00A3E0]" onClick={() => alert("Simulating upload... (This would parse your PDF for context)")}><Upload className="w-3.5 h-3.5" /><span>Upload Context PDF</span></button>
-                                    {stage !== 'input' && <button onClick={() => setStage('input')} className="text-[#00A3E0] underline text-xs normal-case ml-2">Edit Proposal</button>}
-                                </div>
-                            </div>
-                            <textarea value={proposal} onChange={(e) => setProposal(e.target.value)} placeholder="Draft policy here..." className="w-full bg-[#F0F4F8] border-2 border-gray-300 p-4 text-lg focus:border-[#00A3E0] outline-none min-h-[120px]" disabled={stage !== 'input'} />
-                            {stage === 'input' && <div className="mt-4 flex justify-end"><button onClick={runCouncil} disabled={!proposal.trim()} className="bg-black text-white px-6 py-3 font-bold border-2 border-transparent hover:bg-[#00A3E0] hover:border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2"><MessageSquare className="w-4 h-4" /> Run Impact Analysis</button></div>}
-                            {error && <div className="mt-3 text-red-600 font-bold text-sm flex items-center gap-2"><ShieldAlert className="w-4 h-4"/> {error}</div>}
-                        </section>
-                        {(stage === 'deliberating' || stage === 'reflection' || stage === 'synthesized') && <WorkflowStepper step={processingStep} />}
-                        {stage !== 'input' && (
-                            <section className="space-y-6">
-                                <div className="flex items-center justify-between border-b-2 border-black pb-2"><h2 className="text-xl font-bold flex items-center gap-2"><Users className="w-5 h-5" /> Stakeholder Feedback</h2></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{councilState.map((member) => <CouncilCard key={member.id} member={member} loading={stage === 'deliberating'} />)}</div>
-                            </section>
-                        )}
-                        {(stage === 'reflection' || stage === 'synthesized') && (
-                            <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-l-8 border-l-[#00A3E0]">
-                                <h3 className="text-lg font-black mb-2 flex items-center gap-2"><PenTool className="w-5 h-5 text-[#00A3E0]" /> Your Decision Deck</h3>
-                                <p className="text-sm text-gray-600 mb-4">Conflict: <strong>"{conflict}"</strong>. How will you address this?</p>
-                                <textarea value={studentReflection} onChange={(e) => setStudentReflection(e.target.value)} placeholder="My decision..." className="w-full bg-[#F0F4F8] border-2 border-gray-300 p-4 text-sm focus:border-[#00A3E0] outline-none min-h-[100px] mb-4" disabled={stage === 'synthesized'} />
-                                {stage === 'reflection' && <div className="flex justify-end"><button onClick={finalizeReflection} disabled={!studentReflection.trim()} className="bg-black text-white px-6 py-2 font-bold hover:bg-[#00A3E0]">Submit & Compare</button></div>}
-                            </section>
-                        )}
-                        {stage === 'synthesized' && synthesis && (
-                            <>
-                                <section className="animate-in fade-in slide-in-from-bottom-8 duration-700 bg-[#1B3C35] text-white p-1 border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                                    <div className="border border-white/20 p-6 md:p-8">
-                                        <div className="flex items-start gap-6">
-                                            <div className="p-4 bg-white/10 hidden sm:block border border-white/20"><Gavel className="w-10 h-10 text-white" /></div>
-                                            <div className="flex-grow space-y-6">
-                                                <div className="flex items-center justify-between border-b border-white/20 pb-4"><div><h2 className="text-2xl font-black tracking-tight">Coordinator's Model Answer</h2></div><button onClick={runCouncil} className="p-2 hover:bg-white/10 rounded"><RefreshCw className="w-5 h-5" /></button></div>
-                                                <div className="prose prose-invert max-w-none"><div className="whitespace-pre-line text-lg">{synthesis}</div></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-                                <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 mt-6 bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-l-8 border-l-rose-500">
-                                    <h3 className="text-lg font-black mb-2 flex items-center gap-2 text-rose-600"><AlertTriangle className="w-5 h-5" /> Challenge the Model</h3>
-                                    <textarea value={studentRebuttal} onChange={(e) => setStudentRebuttal(e.target.value)} placeholder="Rebuttal..." className="w-full bg-[#F0F4F8] border-2 border-gray-300 p-4 text-sm focus:border-rose-500 outline-none min-h-[100px]" />
-                                </section>
-                                <div className="flex justify-center mt-8 pb-12"><button onClick={copyBriefToClipboard} className="flex items-center gap-2 bg-black text-white px-8 py-4 font-bold text-lg hover:bg-[#00A3E0] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"><ClipboardCopy className="w-5 h-5" /> Export Full Case</button></div>
-                            </>
-                        )}
-                    </main>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+                            <h2 className="text
